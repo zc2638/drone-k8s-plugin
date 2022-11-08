@@ -50,8 +50,11 @@ steps:
     pull: if-not-exists
     settings:
       k8s_server: https://localhost:6443
-      k8s_token: token
-      k8s_skip_tls: true
+      k8s_token:
+        from_secret: k8s_token
+      k8s_ca_crt:
+        from_secret: k8s_ca_crt
+      k8s_skip_tls: false
       namespace: default
       config_files:
         - default:test-config:testdata/config.yaml
@@ -74,7 +77,8 @@ steps:
     pull: if-not-exists
     environment:
       K8S_SERVER: https://localhost:6443
-      K8S_TOKEN: token
+      K8S_TOKEN:
+        from_secret: k8s_token
       K8S_SKIP_TLS: true
       NAMESPACE: default
       TEMPLATES: testdata/deployment.yaml,testdata/service.yaml
