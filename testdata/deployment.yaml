@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .env.app_name }}
+  namespace: {{ .env.app_namespace }}
+  labels:
+    app: {{ .env.app_name }}
+spec:
+  selector:
+    matchLabels:
+      app: {{ .env.app_name }}
+  template:
+    metadata:
+      name: {{ .env.app_name }}
+      labels:
+        app: {{ .env.app_name }}
+    spec:
+      containers:
+        - name: {{ .env.app_name }}
+          image: zc2638/mock:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 9090
+          resources:
+            limits:
+              cpu: 128m
+              memory: '268435456'
+            requests:
+              cpu: 64m
+              memory: '268435456'
