@@ -33,3 +33,47 @@ docker run --rm \
 | namespace           |    ️     | string   | Default namespace to use when namespace is not set.                                                                                                                                                                                                                    |
 | debug               |    ️     | bool     | Used to enable debug level logging.                                                                                                                                                                                                                                    |
 
+## Drone Example
+
+```yaml
+---
+kind: pipeline
+type: docker
+name: drone-k8s-plugin-test
+
+steps:
+  - name: deploy
+    image: zc2638/drone-k8s-plugin
+    pull: if-not-exists
+    settings:
+      k8s_server: https://localhost:6443
+      k8s_token: token
+      k8s_skip_tls: true
+      namespace: default
+      config_files:
+        - default:test-config:testdata/config.yaml
+        - default:test-config:testdata/config.yaml:a.yaml
+      templates:
+        - testdata/deployment.yaml
+        - testdata/service.yaml
+      app_name: ${DRONE_REPO_NAME}
+```
+OR 
+
+```yaml
+kind: pipeline
+type: docker
+name: drone-k8s-plugin-test
+
+steps:
+  - name: deploy
+    image: zc2638/drone-k8s-plugin
+    pull: if-not-exists
+    environment:
+      K8S_SERVER: https://localhost:6443
+      K8S_TOKEN: token
+      K8S_SKIP_TLS: true
+      NAMESPACE: default
+      TEMPLATES: testdata/deployment.yaml,testdata/service.yaml
+      APP_NAME: ${DRONE_REPO_NAME}
+```
