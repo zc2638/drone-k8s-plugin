@@ -23,6 +23,8 @@ import (
 	"strconv"
 	"strings"
 
+	pkgruntime "k8s.io/apimachinery/pkg/runtime"
+
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/sirupsen/logrus"
@@ -47,6 +49,7 @@ var (
 func run(cfg *Config, kubeClient kubernetes.Interface, dynamicClient dynamic.Interface) error {
 	envMap := make(map[string]string)
 	envs := os.Environ()
+	fmt.Printf("%+v\n", envs)
 	for _, v := range envs {
 		if pluginExp.MatchString(v) {
 			matches := pluginExp.FindStringSubmatch(v)
@@ -58,6 +61,9 @@ func run(cfg *Config, kubeClient kubernetes.Interface, dynamicClient dynamic.Int
 			key := strings.ToLower(matches[1])
 			envMap[key] = matches[2]
 		}
+	}
+	for k, v := range envMap {
+		logrus.Debugf("env: %s=%s", k, v)
 	}
 
 	initObjSet, err := parseObjectSet(cfg.InitTemplates, envMap)
@@ -172,6 +178,15 @@ func applyResources(
 					},
 				})
 				if err == nil {
+					switch objCopy.GetKind() {
+					case "Service":
+						objCopy, err = completeService(origin, objCopy)
+						if err != nil {
+							return err
+						}
+					default:
+					}
+
 					rv, _ := strconv.ParseInt(origin.GetResourceVersion(), 10, 64)
 					objCopy.SetResourceVersion(strconv.FormatInt(rv, 10))
 					if _, err = resourceInter.Update(ctx, objCopy, metav1.UpdateOptions{}); err != nil {
@@ -194,6 +209,32 @@ func applyResources(
 	}
 	return nil
 }
+
+func completeService(origin, obj *unstructured.Unstructured) (*unstructured.Unstructured, error) {
+	var (
+		originSvc v1.Service
+		objSvc    v1.Service
+	)
+	if err := pkgruntime.DefaultUnstructuredConverter.FromUnstructured(origin.UnstructuredContent(), &originSvc); err != nil {
+		return nil, fmt.Errorf("convert origin unstructured object %s to Service failed: %v", obj.GetName(), err)
+	}
+	if err := pkgruntime.DefaultUnstructuredConverter.FromUnstructured(obj.UnstructuredContent(), &objSvc); err != nil {
+		return nil, fmt.Errorf("convert unstructured object %s to Service failed: %v", obj.GetName(), err)
+	}
+
+	objSvc.Spec.ClusterIP = originSvc.Spec.ClusterIP
+	objSvc.Spec.ClusterIPs = originSvc.Spec.ClusterIPs
+
+	unstructuredContent, err := pkgruntime.DefaultUnstructuredConverter.ToUnstructured(&objSvc)
+	if err != nil {
+		return nil, fmt.Errorf("convert Service %s to unstructured object failed: %v", objSvc.GetName(), err)
+	}
+
+	current := &unstructured.Unstructured{}
+	current.SetUnstructuredContent(unstructuredContent)
+	return current, nil
+}
+
 func applyForConfig(kubeClient kubernetes.Interface, cfs []ConfigFile) error {
 	if len(cfs) == 0 {
 		return nil
