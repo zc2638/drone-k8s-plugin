@@ -58,7 +58,7 @@ func (c *Config) BindEnvs() {
 	c.bindEnv("kubernetes.server", "k8s.server")
 	c.bindEnv("kubernetes.token", "k8s.token")
 	c.bindEnv("kubernetes.ca_crt", "k8s.ca_crt")
-	c.bindEnv("kubernetes.skip_tls_verify", "k8s.skip_tls_verify")
+	c.bindEnv("kubernetes.skip_tls", "k8s.skip_tls")
 }
 
 func (c *Config) bindEnv(input ...string) {
