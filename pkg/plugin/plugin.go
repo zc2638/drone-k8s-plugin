@@ -79,15 +79,15 @@ func run(cfg *Config, kubeClient kubernetes.Interface, dynamicClient dynamic.Int
 	}
 	mapping := restmapper.NewDiscoveryRESTMapper(gr)
 
-	logrus.Debug("start to apply resources from init templates")
+	logrus.Debug("Start to apply resources from init templates")
 	if err := applyResources(dynamicClient, mapping, initObjSet, cfg.Namespace); err != nil {
 		return err
 	}
-	logrus.Debug("start to apply configmaps from config files")
+	logrus.Debug("Start to apply configmaps from config files")
 	if err := applyForConfig(kubeClient, cfg.GetConfigFiles()); err != nil {
 		return err
 	}
-	logrus.Debug("start to apply resources from templates")
+	logrus.Debug("Start to apply resources from templates")
 	if err := applyResources(dynamicClient, mapping, objSet, cfg.Namespace); err != nil {
 		return err
 	}
@@ -144,7 +144,7 @@ func applyResources(
 					WithField("kind", gvk.Kind).
 					WithField("namespace", objCopy.GetNamespace()).
 					WithField("name", objCopy.GetName()).
-					Info("Apply resource")
+					Info("Apply Resource")
 
 				restMapping, err := mapping.RESTMapping(gvk.GroupKind(), gvk.Version)
 				if err != nil {
