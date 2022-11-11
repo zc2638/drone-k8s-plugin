@@ -49,21 +49,19 @@ var (
 func run(cfg *Config, kubeClient kubernetes.Interface, dynamicClient dynamic.Interface) error {
 	envMap := make(map[string]string)
 	envs := os.Environ()
-	fmt.Printf("%+v\n", envs)
 	for _, v := range envs {
 		if pluginExp.MatchString(v) {
 			matches := pluginExp.FindStringSubmatch(v)
 			key := strings.ToLower(matches[1])
 			envMap[key] = matches[2]
+			logrus.Debugf("env: %s=%s", key, matches[2])
 		}
 		if droneExp.MatchString(v) {
 			matches := droneExp.FindStringSubmatch(v)
 			key := strings.ToLower(matches[1])
 			envMap[key] = matches[2]
+			logrus.Debugf("env: %s=%s", key, matches[2])
 		}
-	}
-	for k, v := range envMap {
-		logrus.Debugf("env: %s=%s", k, v)
 	}
 
 	initObjSet, err := parseObjectSet(cfg.InitTemplates, envMap)
