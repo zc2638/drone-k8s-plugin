@@ -21,7 +21,6 @@ import (
 	"path/filepath"
 	"regexp"
 	"strconv"
-	"strings"
 
 	pkgruntime "k8s.io/apimachinery/pkg/runtime"
 
@@ -43,25 +42,12 @@ import (
 
 var pluginExp = regexp.MustCompile(`^PLUGIN_(.*)=(.*)`)
 
-func run(cfg *Config, kubeClient kubernetes.Interface, dynamicClient dynamic.Interface) error {
-	envMap := make(map[string]string)
-	envs := os.Environ()
-	for _, v := range envs {
-		if pluginExp.MatchString(v) {
-			matches := pluginExp.FindStringSubmatch(v)
-			key := strings.ToLower(matches[1])
-			envMap[key] = matches[2]
-			logrus.Debugf("env: %s=%s", key, matches[2])
-		}
-
-		parts := strings.SplitN(v, "=", 2)
-		if len(parts) != 2 {
-			continue
-		}
-		envMap[parts[0]] = parts[1]
-		logrus.Debugf("env: %s=%s", parts[0], parts[1])
-	}
-
+func run(
+	cfg *Config,
+	kubeClient kubernetes.Interface,
+	dynamicClient dynamic.Interface,
+	envMap map[string]string,
+) error {
 	initObjSet, err := parseObjectSet(cfg.InitTemplates, envMap)
 	if err != nil {
 		return fmt.Errorf("parse init_templates failed: %v", err)

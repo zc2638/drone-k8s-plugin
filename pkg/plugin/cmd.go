@@ -15,7 +15,9 @@
 package plugin
 
 import (
+	"fmt"
 	"os"
+	"strings"
 
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
@@ -46,10 +48,14 @@ func NewCommand() *cobra.Command {
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg := opt.Config()
 			cfg.BindEnvs()
+			logrus.Infof("Config Path: %s", opt.ConfigPath)
 			if err := cfg.Parse(opt.ConfigPath, constants.ProjectName); err != nil {
 				logrus.Fatal(err)
 			}
-			if err := cfg.Validate(); err != nil {
+
+			envMap := getEnvMap()
+			envs := envToSlice(envMap)
+			if err := cfg.Validate(envs); err != nil {
 				logrus.Fatal(err)
 			}
 			if cfg.Debug {
@@ -69,7 +75,7 @@ func NewCommand() *cobra.Command {
 			if err != nil {
 				logrus.Fatal(err)
 			}
-			if err := run(cfg, kubeClient, dynamicClient); err != nil {
+			if err := run(cfg, kubeClient, dynamicClient, envMap); err != nil {
 				logrus.Fatal(err)
 			}
 		},
@@ -78,4 +84,33 @@ func NewCommand() *cobra.Command {
 	cmd.Flags().StringVarP(&opt.ConfigPath, "config", "c", opt.ConfigPath,
 		"config file (default is $HOME/.drone-plugin/config.yaml)")
 	return cmd
+}
+
+func getEnvMap() map[string]string {
+	envMap := make(map[string]string)
+	envs := os.Environ()
+	for _, v := range envs {
+		if pluginExp.MatchString(v) {
+			matches := pluginExp.FindStringSubmatch(v)
+			key := strings.ToLower(matches[1])
+			envMap[key] = matches[2]
+			logrus.Debugf("env: %s=%s", key, matches[2])
+		}
+
+		parts := strings.SplitN(v, "=", 2)
+		if len(parts) != 2 {
+			continue
+		}
+		envMap[parts[0]] = parts[1]
+		logrus.Debugf("env: %s=%s", parts[0], parts[1])
+	}
+	return envMap
+}
+
+func envToSlice(set map[string]string) []string {
+	env := make([]string, 0, len(set))
+	for k, v := range set {
+		env = append(env, fmt.Sprintf("%s=%s", k, v))
+	}
+	return env
 }

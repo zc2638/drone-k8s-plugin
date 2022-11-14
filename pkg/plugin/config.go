@@ -21,6 +21,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/a8m/envsubst/parse"
+
 	"github.com/zc2638/drone-k8s-plugin/pkg/constants"
 
 	"github.com/zc2638/drone-k8s-plugin/pkg/kube"
@@ -83,29 +85,35 @@ func (c *Config) GetConfigFiles() []ConfigFile {
 	return c.configFiles[:]
 }
 
-func (c *Config) Validate() error {
+func (c *Config) Validate(envs []string) error {
 	if len(c.InitTemplates) == 0 && len(c.ConfigFiles) == 0 && len(c.Templates) == 0 {
 		return errors.New("at least one of init_templates, config_files and templates is defined")
 	}
 
+	parser := parse.New("string", envs, &parse.Restrictions{})
+
 	cfs := make([]ConfigFile, 0, len(c.ConfigFiles))
 	for _, v := range c.ConfigFiles {
+		val, err := parser.Parse(v)
+		if err != nil {
+			return fmt.Errorf("parse env variable failed: %v", err)
+		}
+
 		cf := ConfigFile{}
-		parts := strings.Split(v, ":")
+		parts := strings.Split(val, ":")
 		switch len(parts) {
 		case 3:
 		case 4:
 			cf.FileName = parts[3]
 		default:
-			return fmt.Errorf("config file (%s) format error, please use `namespace:name:file` or `namespace:name:filepath:filename` to define", v)
+			return fmt.Errorf("config file (%s) format error, please use `namespace:name:file` or `namespace:name:filepath:filename` to define", val)
 		}
 		cf.Namespace = parts[0]
 		cf.Name = parts[1]
 		cf.FilePath = parts[2]
 
-		_, err := os.Stat(cf.FilePath)
-		if err != nil {
-			return err
+		if _, err := os.Stat(cf.FilePath); err != nil {
+			return fmt.Errorf("stat config file(%s) failed: %v", val, err)
 		}
 		cfs = append(cfs, cf)
 	}
