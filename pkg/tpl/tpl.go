@@ -18,10 +18,12 @@ import (
 	"bytes"
 	"text/template"
 
+	"github.com/Masterminds/sprig"
+
 	"github.com/zc2638/drone-k8s-plugin/pkg/constants"
 )
 
-var tpl = template.New(constants.ProjectName)
+var tpl = template.New(constants.ProjectName).Funcs(sprig.TxtFuncMap())
 
 func Render(in []byte, envMap map[string]string) ([]byte, error) {
 	t, err := tpl.Parse(string(in))

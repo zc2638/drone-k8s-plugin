@@ -41,10 +41,7 @@ import (
 	"github.com/zc2638/drone-k8s-plugin/pkg/tpl"
 )
 
-var (
-	pluginExp = regexp.MustCompile(`^PLUGIN_(.*)=(.*)`)
-	droneExp  = regexp.MustCompile(`^DRONE_(.*)=(.*)`)
-)
+var pluginExp = regexp.MustCompile(`^PLUGIN_(.*)=(.*)`)
 
 func run(cfg *Config, kubeClient kubernetes.Interface, dynamicClient dynamic.Interface) error {
 	envMap := make(map[string]string)
@@ -56,12 +53,13 @@ func run(cfg *Config, kubeClient kubernetes.Interface, dynamicClient dynamic.Int
 			envMap[key] = matches[2]
 			logrus.Debugf("env: %s=%s", key, matches[2])
 		}
-		if droneExp.MatchString(v) {
-			matches := droneExp.FindStringSubmatch(v)
-			key := strings.ToLower(matches[1])
-			envMap[key] = matches[2]
-			logrus.Debugf("env: %s=%s", key, matches[2])
+
+		parts := strings.SplitN(v, "=", 2)
+		if len(parts) != 2 {
+			continue
 		}
+		envMap[parts[0]] = parts[1]
+		logrus.Debugf("env: %s=%s", parts[0], parts[1])
 	}
 
 	initObjSet, err := parseObjectSet(cfg.InitTemplates, envMap)
