@@ -56,12 +56,15 @@ steps:
         from_secret: k8s_ca_crt
       k8s_skip_tls: false
       namespace: default
+      init_templates:
+        - testdata/namespace.yaml
       config_files:
         - default:test-config:testdata/config.yaml
         - default:test-config:testdata/config.yaml:a.yaml
       templates:
         - testdata/deployment.yaml
         - testdata/service.yaml
+        - testdata/*.yaml
       app_name: ${DRONE_REPO_NAME}
 ```
 OR 

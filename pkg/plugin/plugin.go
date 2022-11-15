@@ -22,6 +22,10 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/99nil/gopkg/sets"
+
+	"github.com/bmatcuk/doublestar/v4"
+
 	pkgruntime "k8s.io/apimachinery/pkg/runtime"
 
 	v1 "k8s.io/api/core/v1"
@@ -79,16 +83,26 @@ func run(
 }
 
 func parseObjectSet(templates []string, envMap map[string]string) ([][]unstructured.Unstructured, error) {
-	if len(templates) == 0 {
+	fileSet := sets.New[string]()
+	for _, v := range templates {
+		matches, err := doublestar.FilepathGlob(v)
+		if err != nil {
+			return nil, err
+		}
+		fileSet.Add(matches...)
+	}
+
+	files := fileSet.List()
+	if len(files) == 0 {
 		return nil, nil
 	}
 
-	objSet := make([][]unstructured.Unstructured, 0, len(templates))
-	for _, v := range templates {
+	objSet := make([][]unstructured.Unstructured, 0, len(files))
+	for _, v := range files {
 		ext := filepath.Ext(v)
 		isYamlFile := ext == ".yaml" || ext == ".yml"
 		if !isYamlFile {
-			logrus.Warnf("Ignore file (%s), not a yaml or yml file", v)
+			logrus.Warnf("Ignore dir or file (%s), not a yaml or yml file", v)
 			continue
 		}
 

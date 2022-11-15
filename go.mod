@@ -3,7 +3,10 @@ module github.com/zc2638/drone-k8s-plugin
 go 1.19
 
 require (
+	github.com/99nil/gopkg v0.0.0-20221020090523-251ae5920751
 	github.com/Masterminds/sprig v2.22.0+incompatible
+	github.com/a8m/envsubst v1.3.0
+	github.com/bmatcuk/doublestar/v4 v4.4.0
 	github.com/mitchellh/go-homedir v1.1.0
 	github.com/mitchellh/mapstructure v1.5.0
 	github.com/sirupsen/logrus v1.9.0
@@ -20,7 +23,6 @@ require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
-	github.com/a8m/envsubst v1.3.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.8.0 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
