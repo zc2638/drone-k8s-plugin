@@ -17,6 +17,7 @@ package kube
 import (
 	"encoding/base64"
 	"errors"
+	"fmt"
 	"strings"
 
 	"k8s.io/client-go/rest"
@@ -39,7 +40,7 @@ func NewRestConfig(config *Config) (*rest.Config, error) {
 	token := strings.ReplaceAll(config.Token, " ", "")
 	tokenBytes, err := base64.StdEncoding.DecodeString(token)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("base64 decode token failed: %v", err)
 	}
 	restConfig = &rest.Config{
 		BearerToken: string(tokenBytes),
@@ -49,8 +50,13 @@ func NewRestConfig(config *Config) (*rest.Config, error) {
 		},
 	}
 	if !config.SkipTLS {
+		caCrt := strings.ReplaceAll(config.CaCrt, " ", "")
+		caCrtBytes, err := base64.StdEncoding.DecodeString(caCrt)
+		if err != nil {
+			return nil, fmt.Errorf("base64 decode ca failed: %v", err)
+		}
 		restConfig.Insecure = false
-		restConfig.CAData = []byte(config.CaCrt)
+		restConfig.CAData = caCrtBytes
 	}
 
 	restConfig.RateLimiter = flowcontrol.NewTokenBucketRateLimiter(1000, 1000)
