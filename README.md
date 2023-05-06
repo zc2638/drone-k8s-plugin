@@ -1,7 +1,8 @@
 # drone-k8s-plugin
 
 ![LICENSE](https://img.shields.io/github/license/zc2638/drone-k8s-plugin.svg?style=flat-square&color=blue)
-[![GitHub Workflow Status](https://img.shields.io/github/workflow/status/zc2638/drone-k8s-plugin/Main%20CI%20WorkFlow/main?logo=github&style=flat-square)](https://github.com/zc2638/drone-k8s-plugin/actions)
+[![GitHub Workflow Status](https://img.shields.io/github/actions/workflow/status/zc2638/drone-k8s-plugin/main.yml?branch=main&style=flat-square)](https://github.com/zc2638/drone-k8s-plugin/actions)
+
 
 Drone CI plugin for creating & updating K8s Resources.  
 This plugin supports all Kubernetes resources and also supports creating/updating Configmaps from config files.
